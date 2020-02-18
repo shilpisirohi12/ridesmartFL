@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block head %} 
+<title>RidesmartFL Dashboard</title>
+{% endblock %}
+
+{% block body %} 
+<h3>Filters</h3>
+<form action='/dashboard' method="POST">
+    <select name="year" id="year" method="GET" action="/">
+        <option value="{{years[0]}}" selected>{{years[0]}}</option>
+        {% for year in years[1:] %}
+        <option value= "{{year}}" >{{year}}</option>"
+        {% endfor %}
+    </select>
+    <input type='button' value='Post'>
+</form>
+
+<h1>Data from dict</h1><hr>
+{% for dt in data %}
+    <h3>Year: {{dt.Year}}</h3>
+    <h3>Fatalities: {{dt.Fatalities}}</h3>
+    <h3>Serious_Injuries: {{dt.Serious_Injuries}}</h3>
+    <h3>Total_Fatalities: {{dt.Total_Fatalities}}</h3> 
+    <hr>
+{% endfor %}
+
+{% endblock %}
