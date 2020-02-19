@@ -6,34 +6,39 @@ app.config['SQLALCHEMY_DATABASE_URI']='mysql://shilpi:shilpi@127.0.0.1:3306/ride
 db=SQLAlchemy(app)
 
 class Example(db.Model):
-    __tablename__ = 'test'
-    id=db.Column('id',db.Integer, primary_key=True)
-    name=db.Column('name',db.Unicode)
+    __tablename__ = 'fatal'
+    year=db.Column('year',db.Unicode, primary_key=True)
+    fatalities=db.Column('fatalities',db.Integer)
+    serious_inj=db.Column('serious_inj',db.Integer)
+    total_fatal=db.Column('total_fatal',db.Integer)
+
+    def __repr__(self):
+        return self.year
 
 
-DataDict=[
-    {
-        'Year':'2011',
-        'Fatalities':'934',
-        'Serious_Injuries':'2491',
-        'Total_Fatalities': '2405'
+# DataDict=[
+#     {
+#         'Year':'2011',
+#         'Fatalities':'934',
+#         'Serious_Injuries':'2491',
+#         'Total_Fatalities': '2405'
 
-    },
-    {
-        'Year':'2012',
-        'Fatalities':'895',
-        'Serious_Injuries':'2383',
-        'Total_Fatalities': '2413'
+#     },
+#     {
+#         'Year':'2012',
+#         'Fatalities':'895',
+#         'Serious_Injuries':'2383',
+#         'Total_Fatalities': '2413'
 
-    },
-        {
-        'Year':'2013',
-        'Fatalities':'863',
-        'Serious_Injuries':'2194',
-        'Total_Fatalities': '2194'
+#     },
+#         {
+#         'Year':'2013',
+#         'Fatalities':'863',
+#         'Serious_Injuries':'2194',
+#         'Total_Fatalities': '2194'
 
-    }
-]
+#     }
+# ]
 
 year=['2011','2012','2013','2014','2015','2016','2017','2018']
 
@@ -43,7 +48,9 @@ def start():
         year_selected=request.form.get('year')
         print(year_selected)
         return render_template('success.html',year=year_selected)
+        #return redirect('/dashboard')
     else:
+        DataDict=Example.query.order_by().all()
         return render_template('dashboard.html',data=DataDict,years=year)
 
 

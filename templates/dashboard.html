@@ -13,15 +13,21 @@
         <option value= "{{year}}" >{{year}}</option>"
         {% endfor %}
     </select>
-    <input type='button' value='Post'>
+    <select name="district" id="district" method="GET" action="/">
+        <option value="{{years[0]}}" selected>{{years[0]}}</option>
+        {% for year in years[1:] %}
+        <option value= "{{year}}" >{{year}}</option>"
+        {% endfor %}
+    </select>
+    <input type='submit' value='Post'>
 </form>
 
 <h1>Data from dict</h1><hr>
 {% for dt in data %}
-    <h3>Year: {{dt.Year}}</h3>
-    <h3>Fatalities: {{dt.Fatalities}}</h3>
-    <h3>Serious_Injuries: {{dt.Serious_Injuries}}</h3>
-    <h3>Total_Fatalities: {{dt.Total_Fatalities}}</h3> 
+    <h3>Year: {{dt.year}}</h3>
+    <h3>Fatalities: {{dt.fatalities}}</h3>
+    <h3>Serious_Injuries: {{dt.serious_inj}}</h3>
+    <h3>Total_Fatalities: {{dt.total_fatal}}</h3> 
     <hr>
 {% endfor %}
 
