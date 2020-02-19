@@ -1,57 +1,111 @@
-from flask import Flask,render_template,request
+from flask import Flask,render_template,request,redirect
 from flask_sqlalchemy import SQLAlchemy
 
+#Setting up the app
 app=Flask(__name__)
+app.jinja_env.globals.update(zip=zip)
 app.config['SQLALCHEMY_DATABASE_URI']='mysql://shilpi:shilpi@127.0.0.1:3306/ridesmartfl'
 db=SQLAlchemy(app)
 
+#Fetching data from DB 
 class Example(db.Model):
-    __tablename__ = 'fatal'
-    year=db.Column('year',db.Unicode, primary_key=True)
-    fatalities=db.Column('fatalities',db.Integer)
-    serious_inj=db.Column('serious_inj',db.Integer)
-    total_fatal=db.Column('total_fatal',db.Integer)
+    __tablename__ = 'crash'
+    crsh_num=db.Column('CRSH_NUM',db.Unicode, primary_key=True)
+    year=db.Column('CAL_YR',db.Unicode)
+    dist_code=db.Column('MANDIST',db.Unicode)
+    county_code=db.Column('CONTYDOT',db.Unicode)
+    fatalities=db.Column('TOT_OF_FATL_NUM',db.Integer)
+    serious_inj=db.Column('TOT_OF_INJR_NUM',db.Integer)
 
     def __repr__(self):
         return self.year
 
 
-# DataDict=[
-#     {
-#         'Year':'2011',
-#         'Fatalities':'934',
-#         'Serious_Injuries':'2491',
-#         'Total_Fatalities': '2405'
-
-#     },
-#     {
-#         'Year':'2012',
-#         'Fatalities':'895',
-#         'Serious_Injuries':'2383',
-#         'Total_Fatalities': '2413'
-
-#     },
-#         {
-#         'Year':'2013',
-#         'Fatalities':'863',
-#         'Serious_Injuries':'2194',
-#         'Total_Fatalities': '2194'
-
-#     }
-# ]
-
+#filters values
 year=['2011','2012','2013','2014','2015','2016','2017','2018']
+district=['01','02','03','04','05','06','07']
+countyName=['Charlotte',
+'Citrus',
+'Collier',
+'Desoto',
+'Glades',
+'Hardee',
+'Hendry',
+'Hernando',
+'Highlands',
+'Hillsborough',
+'Lake',
+'Lee',
+'Manatee',
+'Pasco',
+'Pinellas',
+'Polk',
+'Sarasota',
+'Sumter',
+'Alachua',
+'Baker',
+'Bradford',
+'Columbia',
+'Dixie',
+'Gilchrist',
+'Hamilton',
+'Lafayette',
+'Levy',
+'Madison',
+'Marion',
+'Suwannee',
+'Taylor',
+'Union',
+'Bay',
+'Calhoun',
+'Escambia',
+'Franklin',
+'Gadsden',
+'Gulf',
+'Holmes',
+'Jackson',
+'Jefferson',
+'Leon',
+'Liberty',
+'Okaloosa',
+'Santa Rosa',
+'Wakulla',
+'Walton',
+'Washington',
+'Brevard',
+'Clay',
+'Duval',
+'Flagler',
+'Nassau',
+'Orange',
+'Putnam',
+'Seminole',
+'St Johns',
+'Volusia',
+'Broward',
+'Miami-Dade',
+'Indian River',
+'Martin',
+'Monroe',
+'Okeechobee',
+'Osceola',
+'Palm Beach',
+'St Lucie']
 
 @app.route('/dashboard', methods=['GET','POST'])
 def start():
     if request.method=='POST':
         year_selected=request.form.get('year')
-        print(year_selected)
-        return render_template('success.html',year=year_selected)
-        #return redirect('/dashboard')
+        dist_selected=request.form.get('district')
+        county_selected=request.form.get('county')
+        if(int(year_selected)== 0):
+            DataDict=Example.query.all()
+        else:
+            DataDict=Example.query.filter(Example.year==year_selected).all()
     else:
-        DataDict=Example.query.order_by().all()
-        return render_template('dashboard.html',data=DataDict,years=year)
+        DataDict=Example.query.all()
+ 
+    return render_template('dashboard.html',data=DataDict,years=year,districts=district,counties=countyName)
 
 
 if __name__ == "__main__":

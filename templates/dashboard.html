@@ -7,16 +7,25 @@
 {% block body %} 
 <h3>Filters</h3>
 <form action='/dashboard' method="POST">
+    Year:
     <select name="year" id="year" method="GET" action="/">
-        <option value="{{years[0]}}" selected>{{years[0]}}</option>
-        {% for year in years[1:] %}
+        <option value="0" selected>--Select Year--</option>
+        {% for year in years[:] %}
         <option value= "{{year}}" >{{year}}</option>"
         {% endfor %}
     </select>
+    District: 
     <select name="district" id="district" method="GET" action="/">
-        <option value="{{years[0]}}" selected>{{years[0]}}</option>
-        {% for year in years[1:] %}
-        <option value= "{{year}}" >{{year}}</option>"
+        <option value="0" selected>--Select district--</option>
+        {% for district in districts %}
+        <option value= "{{district}}" >{{district}}</option>"
+        {% endfor %}
+    </select>
+    County:
+    <select name="county" id="county" method="GET" action="/">
+        <option value="0" selected>--Select County--</option>
+        {% for county,count in zip(counties, range(1,100)) %}
+        <option value= "{{count}}" >{{county}}</option>"
         {% endfor %}
     </select>
     <input type='submit' value='Post'>
