@@ -23,7 +23,7 @@ class Example(db.Model):
 
 #filters values
 year=['2011','2012','2013','2014','2015','2016','2017','2018']
-district=['01','02','03','04','05','06','07']
+district=['1','2','3','4','5','6','7']
 countyName=['Charlotte',
 'Citrus',
 'Collier',
@@ -98,10 +98,14 @@ def start():
         year_selected=request.form.get('year')
         dist_selected=request.form.get('district')
         county_selected=request.form.get('county')
-        if(int(year_selected)== 0):
+        if(int(year_selected)== 0 and int(dist_selected)== 0):
             DataDict=Example.query.all()
-        else:
+        elif int(dist_selected)== 0:
             DataDict=Example.query.filter(Example.year==year_selected).all()
+        elif int(year_selected)== 0:
+            DataDict=Example.query.filter(Example.dist_code==dist_selected).all()
+        else:
+            DataDict=Example.query.filter(Example.year==year_selected).filter(Example.dist_code==dist_selected).all()
     else:
         DataDict=Example.query.all()
  

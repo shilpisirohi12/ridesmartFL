@@ -18,7 +18,7 @@
     <select name="district" id="district" method="GET" action="/">
         <option value="0" selected>--Select district--</option>
         {% for district in districts %}
-        <option value= "{{district}}" >{{district}}</option>"
+        <option value= "{{district}}" >District {{district}}</option>"
         {% endfor %}
     </select>
     County:
@@ -34,9 +34,10 @@
 <h1>Data from dict</h1><hr>
 {% for dt in data %}
     <h3>Year: {{dt.year}}</h3>
+    <h3>District: {{dt.dist_code}}</h3>
+    <h3>County: {{dt.county_code}}</h3>
     <h3>Fatalities: {{dt.fatalities}}</h3>
     <h3>Serious_Injuries: {{dt.serious_inj}}</h3>
-    <h3>Total_Fatalities: {{dt.total_fatal}}</h3> 
     <hr>
 {% endfor %}
 
