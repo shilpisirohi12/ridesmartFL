@@ -98,14 +98,23 @@ def start():
         year_selected=request.form.get('year')
         dist_selected=request.form.get('district')
         county_selected=request.form.get('county')
-        if(int(year_selected)== 0 and int(dist_selected)== 0):
+
+        if int(dist_selected)== 0 and int(year_selected)== 0 and int(county_selected) ==0:
             DataDict=Example.query.all()
-        elif int(dist_selected)== 0:
-            DataDict=Example.query.filter(Example.year==year_selected).all()
-        elif int(year_selected)== 0:
+        elif int(dist_selected)!= 0 and int(year_selected)== 0 and int(county_selected) !=0:
+            DataDict=Example.query.filter(Example.dist_code==dist_selected).filter(Example.county_code==county_selected).all()            
+        elif int(dist_selected)== 0 and int(year_selected)!= 0 and int(county_selected) !=0:
+            DataDict=Example.query.filter(Example.year==year_selected).filter(Example.county_code==county_selected).all()
+        elif int(dist_selected)!= 0 and int(year_selected)!= 0 and int(county_selected) ==0:
+            DataDict=Example.query.filter(Example.year==year_selected).filter(Example.dist_code==dist_selected).all()            
+        elif int(year_selected)== 0 and int(county_selected) ==0 and int(dist_selected)!= 0:
             DataDict=Example.query.filter(Example.dist_code==dist_selected).all()
+        elif int(year_selected)!= 0 and int(county_selected) ==0 and int(dist_selected)== 0:
+            DataDict=Example.query.filter(Example.year==year_selected).all()  
+        elif int(year_selected)== 0 and int(county_selected) !=0 and int(dist_selected)== 0:
+            DataDict=Example.query.filter(Example.county_code==county_selected).all()                       
         else:
-            DataDict=Example.query.filter(Example.year==year_selected).filter(Example.dist_code==dist_selected).all()
+            DataDict=Example.query.filter(Example.year==year_selected).filter(Example.dist_code==dist_selected).filter(Example.county_code==county_selected).all()
     else:
         DataDict=Example.query.all()
  
