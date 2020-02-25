@@ -6,25 +6,13 @@ from sqlalchemy import create_engine
 #Setting up the app
 app=Flask(__name__)
 app.jinja_env.globals.update(zip=zip)
-app.config['SQLALCHEMY_DATABASE_URI']='mysql://shilpi:shilpi@127.0.0.1:3306/ridesmartfl'
+#app.config['SQLALCHEMY_DATABASE_URI']='mysql://shilpi:shilpi@127.0.0.1:3306/ridesmartfl'
 engine=create_engine('mysql://shilpi:shilpi@127.0.0.1:3306/ridesmartfl')
 conn=engine.connect()
-db=SQLAlchemy(app)
+#db=SQLAlchemy(app)
 
 
 #Fetching data from DB 
-class Example(db.Model):
-    __tablename__ = 'crash'
-    crsh_num=db.Column('CRSH_NUM',db.Unicode, primary_key=True)
-    year=db.Column('CAL_YR',db.Unicode)
-    dist_code=db.Column('MANDIST',db.Unicode)
-    county_code=db.Column('CONTYDOT',db.Unicode)
-    fatalities=db.Column('TOT_OF_FATL_NUM',db.Integer)
-    serious_inj=db.Column('TOT_OF_INJR_NUM',db.Integer)
-
-    def __repr__(self):
-        return self.year
-
 class fatalities(db.Model):
     __tablename__ = 'fatalities'
     crsh_num=db.Column('CRSH_NUM',db.Unicode, primary_key=True)
@@ -113,11 +101,7 @@ countyName=['Charlotte',
 
 @app.route('/dashboard', methods=['GET','POST'])
 def start():
-    #DataDict=Example.query.all()
     query="SELECT CAL_YR as year,COUNT(*) as cnt  FROM FATALITIES WHERE "
-
-    #DataDict=fatalities.query.all()
-
     if request.method=='POST':
         year_selected=request.form.get('year')
         dist_selected=request.form.get('district')
