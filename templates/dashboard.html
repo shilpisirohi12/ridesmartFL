@@ -32,9 +32,9 @@
 </form>
 
 <h1>Data from dict</h1><hr>
-{% for dt in data %}
+{% for dt in mc_data %}
     <h3>Year: {{dt.year}}</h3>
-    <h3>Fatalities: {{dt.cnt}}</h3>
+    <h3>Fatalities: {{dt.fatalities}}</h3>
     <hr>
 {% endfor %}
 
