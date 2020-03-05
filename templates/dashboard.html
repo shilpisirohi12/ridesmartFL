@@ -2,6 +2,50 @@
 
 {% block head %} 
 <title>RidesmartFL Dashboard</title>
+
+<script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+    google.setOnLoadCallback(drawVisualization);
+
+    function drawVisualization() {
+   // Some raw data (not necessarily accurate)
+      var data = google.visualization.arrayToDataTable([
+          ['Year','MC Fatalities','Fatalities'],
+        {% for d,tt in zip(mc_data,test) %}
+        ['{{d.year}}',parseInt('{{d.fatalities}}'),parseInt('{{tt.t}}')],
+        {% endfor %}
+    ]);
+
+console.log(data)
+//   var data = google.visualization.DataTable();
+//   data.addColumn('string','Year');
+//   data.addColumn('integer','Motorcycle Fatalities');
+//   for ( i=0; i<data.length;i++){
+
+//   }
+  var options = {
+  
+    title : 'Motorcycle Fatalities in Florida (2001 to 2018)',
+    vAxes: {0: {title: 'Motorcycle Fatalities',minValue: 0, titleTextStyle:{  bold: 1,  italic: 0 }},
+            1: {title: 'Traffic Fatalities',minValue: 0, titleTextStyle:{  bold: 1,  italic: 0 }, ticks: [0, 1000, 2000, 3000, 4000]}},
+    hAxis: {title: 'Year', titleTextStyle:{  bold: 1,  italic: 0 }, format: "", minValue: 2000, maxValue: 2018, ticks: [2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018 ],textStyle : { fontSize: 14  },  
+      slantedText: true, slantedTextAngle:90},
+    seriesType: 'bars',
+    series: {0: {targetAxisIndex:0, type:'bars'},
+    1: {targetAxisIndex:1, type: 'line', pointShape: 'circle',color: 'blue',pointSize: 12,lineWidth: 4},
+    0:{color: 'red'}
+    },
+    legend: { position: 'bottom' },
+    backgroundColor: '#A2A2A2',
+    width: '500px',
+    height: '500px'
+    
+  };
+
+  var chart = new google.visualization.ComboChart(document.getElementById('Fatalities'));
+  chart.draw(data, options);
+}
+  </script>
 {% endblock %}
 
 {% block body %} 
@@ -31,11 +75,15 @@
     <input type='submit' value='Post'>
 </form>
 
-<h1>Data from dict</h1><hr>
+<div id="Fatalities" ></div>
+
+
+
+<!-- <h1>Data from dict</h1><hr>
 {% for dt in mc_data %}
     <h3>Year: {{dt.year}}</h3>
     <h3>Fatalities: {{dt.fatalities}}</h3>
     <hr>
-{% endfor %}
+{% endfor %} -->
 
 {% endblock %}
