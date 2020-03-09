@@ -59,7 +59,7 @@ def start():
         params['query']='all'
         
     res=requests.get(requestURL,params=params)        
-    test=[{'t':10},{'t':20},{'t':30},{'t':40},{'t':50},{'t':60},{'t':70},{'t':80},{'t':90}]
+    test=[{'t':2400},{'t':2430},{'t':2402},{'t':2494},{'t':2939},{'t':3176},{'t':3116},{'t':3102},{'t':3000}]
     return render_template('dashboard.html',mc_data=json.loads(res.text),test=test, years=year,districts=district,counties=countyName)
 
 @app.route("/api/v1/resources/getFatalities", methods=['GET'])

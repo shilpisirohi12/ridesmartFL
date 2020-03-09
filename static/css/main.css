@@ -1,4 +1,25 @@
 body{
     font-family: Verdana, Geneva, Tahoma, sans-serif;
-    font-size: 8px;
+    font-size: 200px;
+}
+/* Header */
+.img-fluid{
+    width: 3rem;
+    height: 2rem;
+}
+
+/* Filters */
+
+.label_filter{
+    font-size: 1rem;
+}
+
+/* Footer */
+.align-center {
+    color: rgb(2, 2, 29);
+    font-size: 1rem;
+}
+
+.container{
+    text-align: center;
 }

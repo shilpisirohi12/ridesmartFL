@@ -16,13 +16,6 @@
         {% endfor %}
     ]);
 
-console.log(data)
-//   var data = google.visualization.DataTable();
-//   data.addColumn('string','Year');
-//   data.addColumn('integer','Motorcycle Fatalities');
-//   for ( i=0; i<data.length;i++){
-
-//   }
   var options = {
   
     title : 'Motorcycle Fatalities in Florida (2001 to 2018)',
@@ -49,41 +42,58 @@ console.log(data)
 {% endblock %}
 
 {% block body %} 
-<h3>Filters</h3>
+<header>
+<div class="jumbotron text-center my-2 p-1 bg-dark text-white">
+<h3 class="heading">Motorcycle Analysis Dashboard</h3>
+<img src="/static/images/motorcycle.jpg" >
+</div>
+
+<div class="container-fluid pl-3 bg-dark text-white">
+<h3 class="heading pl-3">Filters</h3>
+<div class="container-fluid pl-3 label_filter">
 <form action='/dashboard' method="POST">
-    Year:
+     <label >Year:</label>
     <select name="year" id="year" method="GET" action="/">
         <option value="0" selected>--Select Year--</option>
         {% for year in years[:] %}
         <option value= "{{year}}" >{{year}}</option>"
         {% endfor %}
     </select>
-    District: 
+    <label>District: </label>
     <select name="district" id="district" method="GET" action="/">
         <option value="0" selected>--Select district--</option>
         {% for district in districts %}
         <option value= "{{district}}" >District {{district}}</option>"
         {% endfor %}
     </select>
-    County:
+    <label>County: </label>
     <select name="county" id="county" method="GET" action="/">
         <option value="0" selected>--Select County--</option>
         {% for county,count in zip(counties, range(1,100)) %}
         <option value= "{{count}}" >{{county}}</option>"
         {% endfor %}
     </select>
-    <input type='submit' value='Post'>
+    <input type='submit' value='Submit'>
 </form>
+</div>
+</div>
+</header>
+<div class="container-fluid">
+    <div class="row pl-3 pl-3 pt-2 pr-3">
+        <div id="Fatalities" class="col-sm-6 p-1 border"></div>
+        <div id="Fatalities1" class="col-sm-6 p-1 border"></div>
 
-<div id="Fatalities" style="border: 1px solid #ccc;width: 875px; height: 600px;padding-left: 4em;padding-right: 4em;padding-top: 2em;padding-bottom: 2em;"></div>
+    </div>
+    <div class="row pl-3 pl-3 pt-2 pr-3">
+        <div id="Fatalities2" class="col-sm-6 p-1 border"></div>
+        <div id="Fatalities3" class="col-sm-6 p-1 border"></div>
 
+    </div>
+</div>
 
-
-<!-- <h1>Data from dict</h1><hr>
-{% for dt in mc_data %}
-    <h3>Year: {{dt.year}}</h3>
-    <h3>Fatalities: {{dt.fatalities}}</h3>
-    <hr>
-{% endfor %} -->
-
+<footer>
+    <div class="container">
+       <label class="align-center"> @2020 All right reservered </label>
+    </div>
+</footer>
 {% endblock %}
