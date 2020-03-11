@@ -4,14 +4,14 @@ body{
 }
 /* Header */
 .img-fluid{
-    width: 3rem;
-    height: 2rem;
+    width: 0.5rem;
+    height: 0.5rem;
 }
 
 /* Filters */
 
 .label_filter{
-    font-size: 1rem;
+    font-size: 0.7rem;
 }
 
 /* Footer */
