@@ -3,12 +3,19 @@ from flask_sqlalchemy import SQLAlchemy
 import json
 import requests
 
+import sqlalchemy
+from sqlalchemy import create_engine
+from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey
+from sqlalchemy import inspect
+from sqlalchemy.sql import text
+
 """Setting up the app"""
 app=Flask(__name__)
 app.jinja_env.globals.update(zip=zip)
 app.secret_key='cutr_usf'
 app.config['SQLALCHEMY_DATABASE_URI']='mysql://shilpi:shilpi@127.0.0.1:3306/ridesmartfl'
-#engine=create_engine('mysql://shilpi:shilpi@127.0.0.1:3306/ridesmartfl')
+
+engine=create_engine('mysql://shilpi:shilpi@127.0.0.1:3306/ridesmartfl')
 #conn=engine.connect()
 db=SQLAlchemy(app)
 URL='http://127.0.0.1:5000'
@@ -36,7 +43,7 @@ district=['1','2','3','4','5','6','7']
 countyName=['Charlotte','Citrus','Collier','Desoto','Glades','Hardee','Hendry','Hernando','Highlands','Hillsborough','Lake','Lee','Manatee','Pasco','Pinellas','Polk','Sarasota','Sumter','Alachua','Baker','Bradford','Columbia','Dixie','Gilchrist','Hamilton','Lafayette','Levy','Madison','Marion','Suwannee','Taylor','Union','Bay','Calhoun','Escambia','Franklin','Gadsden','Gulf','Holmes','Jackson','Jefferson','Leon','Liberty','Okaloosa','Santa Rosa','Wakulla','Walton','Washington','Brevard','Clay','Duval','Flagler','Nassau','Orange','Putnam','Seminole','St Johns','Volusia','Broward','Miami-Dade','Indian River','Martin','Monroe','Okeechobee','Osceola','Palm Beach','St Lucie']
 
 """Starting point of the Dashboard app"""
-@app.route('/dashboard', methods=['GET','POST'])
+@app.route('/dashboard', methods=['GET','POST'], endpoint='start')
 def start():
     """Below code is for graphs which shows the Motorcycle created data for florida"""
 
@@ -44,9 +51,16 @@ def start():
     queryTraffic="SELECT CAL_YR as year,COUNT(*) as cnt  FROM FATALITIES WHERE "
     params={}
     paramsTraffic={}
-    #URL for graph#1 ( MC fatalities in florida)
+    #URL for graph# 1 ( MC fatalities in florida)
     requestURL=URL+'/api/v1/resources/getFatalities'
     requestURLFatal=URL+'/api/v1/resources/getTrafficFatalities'
+
+    #URL for graph# 3 Seriously Injured Motorcyclists by Month (2016-2018 Average)
+    requestURLInjuredAverage=URL+'/api/v1/resources/getInjuredOperators'
+
+    #URL for graph# 4 fatal Motorcyclists by Month (2016-2018 Average)
+    requestURLfatalAverage=URL+'/api/v1/resources/getFatlMCOperators'
+
     print(requestURL)
     if request.method=='POST':
         year_selected=request.form.get('year')
@@ -56,42 +70,36 @@ def start():
         """Setting values for parameters"""
         if int(year_selected) > 0:
             params['year']=year_selected
-            paramsTraffic['year']=year_selected
+            #paramsTraffic['year']=year_selected
         if int(dist_selected) > 0:
             params['district']=dist_selected
-            paramsTraffic['district']=dist_selected
+            #paramsTraffic['district']=dist_selected
         if int(county_selected) > 0:
             params['county']=county_selected
-            paramsTraffic['county']=county_selected
+            #paramsTraffic['county']=county_selected
         if int(year_selected)==0 and int(dist_selected)==0 and int(county_selected)==0:
             params['query']='all'
-            paramsTraffic['query']='all'
+            #paramsTraffic['query']='all'
     else:
         params['query']='all'
-        paramsTraffic['queryTraffic']='all'
+        #paramsTraffic['queryTraffic']='all'
+
         
     res=requests.get(requestURL,params=params)  
-    trafficFatal=requests.get(requestURLFatal,params=paramsTraffic) 
+    trafficFatal=requests.get(requestURLFatal,params=params)
+    injuredAverage=requests.get(requestURLInjuredAverage,params=params) 
+    fatalAverage=requests.get(requestURLfatalAverage,params=params)
 
     #Calculating Proportions
-    total_mc_fatalities=0   
-    for data in json.loads(res.text):
-        #print(data['fatalities'])
-        total_mc_fatalities=total_mc_fatalities+ int(data['fatalities'])
     proportions_fatal=[]
-    for data in json.loads(res.text):
-        proportions_fatal.append({'year':data['year'],'fatalities':round(float(data['fatalities']/total_mc_fatalities*100),2)})
+    for data,traffic in zip(json.loads(res.text),json.loads(trafficFatal.text)):
+        proportions_fatal.append({'year':data['year'],'fatalities':round(float(data['fatalities']/traffic['fatalities']*100),2)})
     print(proportions_fatal)
     
-    
-
-
-
-    #test=[{'t':2400},{'t':2430},{'t':2402},{'t':2494},{'t':2939},{'t':3176},{'t':3116},{'t':3102},{'t':3000}]
-    return render_template('dashboard.html',mc_data=json.loads(res.text),traffic=json.loads(trafficFatal.text),proportions=proportions_fatal, years=year,districts=district,counties=countyName)
+    return render_template('dashboard.html',mc_data=json.loads(res.text),traffic=json.loads(trafficFatal.text),proportions=proportions_fatal,injuredAverage=json.loads(injuredAverage.text),fatalAverage=json.loads(fatalAverage.text), years=year,districts=district,counties=countyName)
 
 """API to query database to get motorcycle fatalities"""
-@app.route("/api/v1/resources/getFatalities", methods=['GET'])
+@app.route("/api/v1/resources/getFatalities", methods=['GET'], endpoint='getFatalities')
 def getFatalities():
     data=[]
     query=db.session.query(fatalities.year, db.func.count(fatalities.crsh_num).label('total')).filter(fatalities.dr_inj_severity=='5').filter(fatalities.body_type=='11').order_by(fatalities.year)
@@ -116,7 +124,7 @@ def getFatalities():
     return jsonify(data)
 
 """API to query database to get traffic fatalities"""
-@app.route("/api/v1/resources/getTrafficFatalities", methods=['GET'])
+@app.route("/api/v1/resources/getTrafficFatalities", methods=['GET'], endpoint='getTrafficFatalities')
 def getTrafficFatalities():
     data=[]
     query=db.session.query(fatalities.year, db.func.count(fatalities.crsh_num).label('total')).filter(fatalities.dr_inj_severity=='4').order_by(fatalities.year)
@@ -143,6 +151,74 @@ def getTrafficFatalities():
         data.append({'year':res.year,'fatalities':res.total})
     return jsonify(data)    
 
+
+"""API to query database to get Fatal MC Operators"""
+@app.route("/api/v1/resources/getFatlMCOperators", methods=['GET'], endpoint='getFatalMCOperators')
+def getFatalMCOperators():
+    data=[]
+    queryOperator='select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD=11 and DR_INJSEVER=5 and cal_yr between 2016 and 2018'
+    queryPassenger='select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD=11 and P1_INJSEVER=5 and cal_yr between 2016 and 2018'
+    #query=db.session.query(fatalities.year, db.func.count(fatalities.crsh_num).label('total')).filter(fatalities.dr_inj_severity=='4').order_by(fatalities.year)
+    if 'query' in request.args:
+        res=request.args['query']
+        if res.lower() == 'all':
+            queryOperator=queryOperator+' group by month(evnt_crsh_dt) order by month'
+            queryPassenger=queryPassenger+' group by month(evnt_crsh_dt) order by month'
+    else:        
+        if 'county' in request.args:
+            county=request.args['county']
+            queryOperator=queryOperator+' and contydot='+county
+            queryPassenger=queryPassenger+' and contydot='+county
+        if 'district' in request.args:
+            district=request.args['district']
+            queryOperator=queryOperator+' and mandist='+district
+            queryPassenger=queryPassenger+' and mandist='+district
+        queryOperator=queryOperator+' group by month(evnt_crsh_dt) order by month'
+        queryPassenger=queryPassenger+' group by month(evnt_crsh_dt) order by month'
+
+    with engine.connect() as con:
+        #rs= con.execute('select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD in (11) and DR_INJSEVER=4 and cal_yr between 2016 and 2018 group by month(evnt_crsh_dt) order by month')
+        rs= con.execute(queryOperator)
+        #rs1= con.execute('select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD in (11) and P1_INJSEVER=4 and cal_yr between 2016 and 2018 group by month(evnt_crsh_dt) order by month')
+        rs1= con.execute(queryPassenger)
+        for row,row1 in zip(rs,rs1):
+            print(row[0],row[1],row1[1])
+            data.append({'month':row[0],'fatal_mcOperator':int(row[1]),'fatal_mcPassenger':int(row1[1])})
+    return jsonify(data)
+
+"""API to query database to get severe injured MC Operators"""
+@app.route("/api/v1/resources/getInjuredOperators", methods=['GET'], endpoint='getInjuredOperators')
+def getInjuredOperators():
+    data=[]
+    queryOperator='select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD=11 and DR_INJSEVER=4 and cal_yr between 2016 and 2018'
+    queryPassenger='select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD=11 and P1_INJSEVER=4 and cal_yr between 2016 and 2018'
+ 
+    if 'query' in request.args:
+        res=request.args['query']
+        if res.lower() == 'all':
+            queryOperator=queryOperator+' group by month(evnt_crsh_dt) order by month'
+            queryPassenger=queryPassenger+' group by month(evnt_crsh_dt) order by month'
+    else:        
+        if 'county' in request.args:
+            county=request.args['county']
+            queryOperator=queryOperator+' and contydot='+county
+            queryPassenger=queryPassenger+' and contydot='+county
+        if 'district' in request.args:
+            district=request.args['district']
+            queryOperator=queryOperator+' and mandist='+district
+            queryPassenger=queryPassenger+' and mandist='+district
+        queryOperator=queryOperator+' group by month(evnt_crsh_dt) order by month'
+        queryPassenger=queryPassenger+' group by month(evnt_crsh_dt) order by month'
+
+    with engine.connect() as con:
+        #rs= con.execute('select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD in (11) and DR_INJSEVER=4 and cal_yr between 2016 and 2018 group by month(evnt_crsh_dt) order by month')
+        rs= con.execute(queryOperator)
+        #rs1= con.execute('select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD in (11) and P1_INJSEVER=4 and cal_yr between 2016 and 2018 group by month(evnt_crsh_dt) order by month')
+        rs1= con.execute(queryPassenger)
+        for row,row1 in zip(rs,rs1):
+            print(row[0],row[1],row1[1])
+            data.append({'month':row[0],'fatal_mcOperator':int(row[1]),'fatal_mcPassenger':int(row1[1])})
+    return jsonify(data)
 
 if __name__ == "__main__":
     app.run(debug=True)
