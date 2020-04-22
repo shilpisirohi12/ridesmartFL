@@ -1,4 +1,4 @@
-from flask import Flask,render_template,request,redirect, jsonify
+from flask import Flask,render_template,request,redirect, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 import json
 import requests
@@ -13,9 +13,9 @@ from sqlalchemy.sql import text
 app=Flask(__name__)
 app.jinja_env.globals.update(zip=zip)
 app.secret_key='cutr_usf'
-app.config['SQLALCHEMY_DATABASE_URI']='mysql://shilpi:shilpi@127.0.0.1:3306/ridesmartfl'
+app.config['SQLALCHEMY_DATABASE_URI']='mysql://cutr:cutr@127.0.0.1:3306/cutr'
 
-engine=create_engine('mysql://shilpi:shilpi@127.0.0.1:3306/ridesmartfl')
+engine=create_engine('mysql://cutr:cutr@127.0.0.1:3306/cutr')
 #conn=engine.connect()
 db=SQLAlchemy(app)
 URL='http://127.0.0.1:5000'
@@ -41,6 +41,8 @@ class fatalities(db.Model):
 year=['2011','2012','2013','2014','2015','2016','2017','2018']
 district=['1','2','3','4','5','6','7']
 countyName=['Charlotte','Citrus','Collier','Desoto','Glades','Hardee','Hendry','Hernando','Highlands','Hillsborough','Lake','Lee','Manatee','Pasco','Pinellas','Polk','Sarasota','Sumter','Alachua','Baker','Bradford','Columbia','Dixie','Gilchrist','Hamilton','Lafayette','Levy','Madison','Marion','Suwannee','Taylor','Union','Bay','Calhoun','Escambia','Franklin','Gadsden','Gulf','Holmes','Jackson','Jefferson','Leon','Liberty','Okaloosa','Santa Rosa','Wakulla','Walton','Washington','Brevard','Clay','Duval','Flagler','Nassau','Orange','Putnam','Seminole','St Johns','Volusia','Broward','Miami-Dade','Indian River','Martin','Monroe','Okeechobee','Osceola','Palm Beach','St Lucie']
+
+
 
 """Starting point of the Dashboard app"""
 @app.route('/dashboard', methods=['GET','POST'], endpoint='start')
@@ -90,13 +92,26 @@ def start():
     injuredAverage=requests.get(requestURLInjuredAverage,params=params) 
     fatalAverage=requests.get(requestURLfatalAverage,params=params)
 
+    # print("res----->")
+    # print(res)
+    # print("\n\n trafficFatal----->")
+    # print(trafficFatal)
+    # print("\n\n injuredAverage----->")
+    # print(injuredAverage)   
+    # print("\n\n fatalAverage----->")
+    # print(fatalAverage)    
+
     #Calculating Proportions
     proportions_fatal=[]
     for data,traffic in zip(json.loads(res.text),json.loads(trafficFatal.text)):
         proportions_fatal.append({'year':data['year'],'fatalities':round(float(data['fatalities']/traffic['fatalities']*100),2)})
-    print(proportions_fatal)
+    # print(proportions_fatal)
     
     return render_template('dashboard.html',mc_data=json.loads(res.text),traffic=json.loads(trafficFatal.text),proportions=proportions_fatal,injuredAverage=json.loads(injuredAverage.text),fatalAverage=json.loads(fatalAverage.text), years=year,districts=district,counties=countyName)
+
+# @app.route("/",endpoint='homepage')
+# def homepage():
+#     render_template('index.html')
 
 """API to query database to get motorcycle fatalities"""
 @app.route("/api/v1/resources/getFatalities", methods=['GET'], endpoint='getFatalities')
@@ -110,7 +125,8 @@ def getFatalities():
     else:        
         if 'year' in request.args:
             yr=request.args['year']
-            query=query.filter(fatalities.year==yr)
+            yrList=yr.split(",")
+            query=query.filter(fatalities.year.in_(yrList))
         if 'county' in request.args:
             county=request.args['county']
             query=query.filter(fatalities.county_code==county)
@@ -121,7 +137,11 @@ def getFatalities():
     for res in fatality_result:
         #print(res)
         data.append({'year':res.year,'fatalities':res.total})
-    return jsonify(data)
+    resp= app.response_class(
+        response=json.dumps(data),
+        mimetype='application/json')
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
 
 """API to query database to get traffic fatalities"""
 @app.route("/api/v1/resources/getTrafficFatalities", methods=['GET'], endpoint='getTrafficFatalities')
@@ -135,7 +155,8 @@ def getTrafficFatalities():
     else:        
         if 'year' in request.args:
             yr=request.args['year']
-            query=query.filter(fatalities.year==yr)
+            yrList=yr.split(",")
+            query=query.filter(fatalities.year.in_(yrList))
         if 'county' in request.args:
             county=request.args['county']
             query=query.filter(fatalities.county_code==county)
@@ -149,22 +170,30 @@ def getTrafficFatalities():
     for res in fatality_result:
         #print(res)
         data.append({'year':res.year,'fatalities':res.total})
-    return jsonify(data)    
+    resp= app.response_class(
+        response=json.dumps(data),
+        mimetype='application/json')
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp    
 
 
 """API to query database to get Fatal MC Operators"""
 @app.route("/api/v1/resources/getFatlMCOperators", methods=['GET'], endpoint='getFatalMCOperators')
 def getFatalMCOperators():
     data=[]
-    queryOperator='select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD=11 and DR_INJSEVER=5 and cal_yr between 2016 and 2018'
-    queryPassenger='select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD=11 and P1_INJSEVER=5 and cal_yr between 2016 and 2018'
+    queryOperator='select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD=11 and DR_INJSEVER=5'
+    queryPassenger='select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD=11 and P1_INJSEVER=5'
     #query=db.session.query(fatalities.year, db.func.count(fatalities.crsh_num).label('total')).filter(fatalities.dr_inj_severity=='4').order_by(fatalities.year)
     if 'query' in request.args:
         res=request.args['query']
         if res.lower() == 'all':
             queryOperator=queryOperator+' group by month(evnt_crsh_dt) order by month'
             queryPassenger=queryPassenger+' group by month(evnt_crsh_dt) order by month'
-    else:        
+    else:
+        if 'year' in request.args:
+            yr=request.args['year']
+            queryOperator=queryOperator+ ' and cal_yr in ('+yr+')'
+            queryPassenger=queryPassenger+ ' and cal_yr in ('+yr+')'          
         if 'county' in request.args:
             county=request.args['county']
             queryOperator=queryOperator+' and contydot='+county
@@ -176,6 +205,8 @@ def getFatalMCOperators():
         queryOperator=queryOperator+' group by month(evnt_crsh_dt) order by month'
         queryPassenger=queryPassenger+' group by month(evnt_crsh_dt) order by month'
 
+        print("queryOperator--->"+queryOperator)
+
     with engine.connect() as con:
         #rs= con.execute('select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD in (11) and DR_INJSEVER=4 and cal_yr between 2016 and 2018 group by month(evnt_crsh_dt) order by month')
         rs= con.execute(queryOperator)
@@ -184,21 +215,29 @@ def getFatalMCOperators():
         for row,row1 in zip(rs,rs1):
             print(row[0],row[1],row1[1])
             data.append({'month':row[0],'fatal_mcOperator':int(row[1]),'fatal_mcPassenger':int(row1[1])})
-    return jsonify(data)
+    resp= app.response_class(
+        response=json.dumps(data),
+        mimetype='application/json')
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
 
 """API to query database to get severe injured MC Operators"""
 @app.route("/api/v1/resources/getInjuredOperators", methods=['GET'], endpoint='getInjuredOperators')
 def getInjuredOperators():
     data=[]
-    queryOperator='select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD=11 and DR_INJSEVER=4 and cal_yr between 2016 and 2018'
-    queryPassenger='select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD=11 and P1_INJSEVER=4 and cal_yr between 2016 and 2018'
+    queryOperator='select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD=11 and DR_INJSEVER=4'
+    queryPassenger='select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD=11 and P1_INJSEVER=4'
  
     if 'query' in request.args:
         res=request.args['query']
         if res.lower() == 'all':
             queryOperator=queryOperator+' group by month(evnt_crsh_dt) order by month'
             queryPassenger=queryPassenger+' group by month(evnt_crsh_dt) order by month'
-    else:        
+    else:
+        if 'year' in request.args:
+            yr=request.args['year']
+            queryOperator=queryOperator+ ' and cal_yr in ('+yr+')'
+            queryPassenger=queryPassenger+ ' and cal_yr in ('+yr+')'         
         if 'county' in request.args:
             county=request.args['county']
             queryOperator=queryOperator+' and contydot='+county
@@ -218,7 +257,121 @@ def getInjuredOperators():
         for row,row1 in zip(rs,rs1):
             print(row[0],row[1],row1[1])
             data.append({'month':row[0],'fatal_mcOperator':int(row[1]),'fatal_mcPassenger':int(row1[1])})
-    return jsonify(data)
+    resp= app.response_class(
+        response=json.dumps(data),
+        mimetype='application/json')
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
+@app.route("/api/v1/resources/getByDayOfWeek", methods=['GET'], endpoint='byDayOfweek')
+def byDayOfweek():
+    data=[]
+    queryFatal='select dayofweek(evnt_crsh_dt) as day_of_week ,count(*) from fatalities  where DR_INJSEVER=5 and VHCL_BDY_TYP_CD=11'
+    queryInjury='select dayofweek(evnt_crsh_dt) as day_of_week ,count(*) from fatalities where DR_INJSEVER=4 and VHCL_BDY_TYP_CD=11'
+ 
+    if 'query' in request.args:
+        res=request.args['query']
+        if res.lower() == 'all':
+            queryFatal=queryFatal+' group by day_of_week having day_of_week not in (1,7) order by day_of_week'
+            queryInjury=queryInjury+' group by day_of_week having day_of_week not in (1,7) order by day_of_week'
+    else:
+        if 'year' in request.args:
+            yr=request.args['year']
+            queryFatal=queryFatal+ ' and cal_yr in ('+yr+')'
+            queryInjury=queryInjury+ ' and cal_yr in ('+yr+')'         
+        if 'county' in request.args:
+            county=request.args['county']
+            queryFatal=queryFatal+' and contydot='+county
+            queryInjury=queryInjury+' and contydot='+county
+        if 'district' in request.args:
+            district=request.args['district']
+            queryFatal=queryFatal+' and mandist='+district
+            queryInjury=queryInjury+' and mandist='+district
+        queryFatal=queryFatal+' group by day_of_week having day_of_week not in (1,7) order by day_of_week'
+        queryInjury=queryInjury+' group by day_of_week having day_of_week not in (1,7) order by day_of_week'
+
+    with engine.connect() as con:
+        #rs= con.execute('select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD in (11) and DR_INJSEVER=4 and cal_yr between 2016 and 2018 group by month(evnt_crsh_dt) order by month')
+        rs= con.execute(queryFatal)
+        #rs1= con.execute('select month(evnt_crsh_dt) as month , round(count(*)/3) from fatalities where VHCL_BDY_TYP_CD in (11) and P1_INJSEVER=4 and cal_yr between 2016 and 2018 group by month(evnt_crsh_dt) order by month')
+        rs1= con.execute(queryInjury)
+        for row,row1 in zip(rs,rs1):
+            print(row[0],row[1],row1[1])
+            data.append({'week':row[0],'fatal':int(row[1]),'injured':int(row1[1])})
+    resp= app.response_class(
+        response=json.dumps(data),
+        mimetype='application/json')
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
+
+
+"""Map related APIs"""
+@app.route("/api/v1/resources/getmcInjuryByCounty", methods=['GET'], endpoint='getmcInjury')
+def getmcInjury():
+    data=[]
+    queryString="select contydot, county_name, count(*) from  fatalities,counties where contydot=county_id  and  DR_INJSEVER=4 and VHCL_BDY_TYP_CD=11"
+
+    if 'query' in request.args:
+        res=request.args['query']
+        if res.lower() == 'all':
+            queryString=queryString+'  group by CONTYDOT order by CONTYDOT'
+    else:
+        if 'year' in request.args:
+            yr=request.args['year']
+            queryString=queryString+ ' and cal_yr in ('+yr+')'         
+        if 'county' in request.args:
+            county=request.args['county']
+            queryString=queryString+' and contydot='+county
+        if 'district' in request.args:
+            district=request.args['district']
+            queryString=queryString+' and mandist='+district
+        queryString=queryString+'  group by CONTYDOT order by CONTYDOT'
+
+    with engine.connect() as con:
+        rs= con.execute(queryString)
+ 
+        for row in rs:
+            print(row[0],row[1],row[2])
+            data.append({'county_id':row[0],'county_name':row[1],'injured':int(row[2])})
+    resp= app.response_class(
+        response=json.dumps(data),
+        mimetype='application/json')
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
+@app.route("/api/v1/resources/getmcFatalityByCounty", methods=['GET'], endpoint='getmcFatality')
+def getmcFatality():
+    data=[]
+    queryString="select contydot, county_name, count(*) from  fatalities,counties where contydot=county_id  and  DR_INJSEVER=5 and VHCL_BDY_TYP_CD=11"
+
+    if 'query' in request.args:
+        res=request.args['query']
+        if res.lower() == 'all':
+            queryString=queryString+'  group by CONTYDOT order by CONTYDOT'
+    else:
+        if 'year' in request.args:
+            yr=request.args['year']
+            queryString=queryString+ ' and cal_yr in ('+yr+')'         
+        if 'county' in request.args:
+            county=request.args['county']
+            queryString=queryString+' and contydot='+county
+        if 'district' in request.args:
+            district=request.args['district']
+            queryString=queryString+' and mandist='+district
+        queryString=queryString+'  group by CONTYDOT order by CONTYDOT'
+
+    with engine.connect() as con:
+        rs= con.execute(queryString)
+ 
+        for row in rs:
+            print(row[0],row[1],row[2])
+            data.append({'county_id':row[0],'county_name':row[1],'fatalities':int(row[2])})
+    resp= app.response_class(
+        response=json.dumps(data),
+        mimetype='application/json')
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
 
 if __name__ == "__main__":
     app.run(debug=True)
