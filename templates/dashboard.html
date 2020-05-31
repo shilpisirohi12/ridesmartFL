@@ -1,207 +1,209 @@
-{% extends 'base.html' %}
-
-{% block head %} 
+{% extends 'base.html' %} {% block head %}
 <title>RidesmartFL Dashboard</title>
 
 <script type="text/javascript">
-$(function() {
-    $('select#county').bind('change', function() {
-      $.getJSON('/_background_process', {
-        district: $('#district').val(),
-      }, function(data) {
-       // $("#result").text(data.result);
-       console.log(data.result)
+  $(function() {
+      $('select#county').bind('change', function() {
+        $.getJSON('/_background_process', {
+          district: $('#district').val(),
+        }, function(data) {
+         // $("#result").text(data.result);
+         console.log(data.result)
+        });
+        return false;
       });
-      return false;
-    });
-  })
+    })
 
 
-  window.onload=$(function() {
-    $('select#county').bind('change', function() {
-      $.getJSON('/_background_process', {
-        district: $(this).children("option:selected").val(),
-      }, function(data) {
-       // $("#result").text(data.result);
-       console.log(data.result)
+    window.onload=$(function() {
+      $('select#county').bind('change', function() {
+        $.getJSON('/_background_process', {
+          district: $(this).children("option:selected").val(),
+        }, function(data) {
+         // $("#result").text(data.result);
+         console.log(data.result)
+        });
+        return false;
       });
-      return false;
     });
-  });
 
-  //graphs
-  google.load("visualization", "1", {packages:["corechart"]});
-  google.setOnLoadCallback(drawVisualization);
+    //graphs
+    google.load("visualization", "1", {packages:["corechart"]});
+    google.setOnLoadCallback(drawVisualization);
 
-  
-  function drawVisualization() {
- // Some raw data (not necessarily accurate)
-    var dataFatalities = google.visualization.arrayToDataTable([
-    ['Year','MC Fatalities','Fatalities'],
-    {% for d,tt in zip(mc_data,traffic) %}
-        ['{{d.year}}',parseInt('{{d.fatalities}}'),parseInt('{{tt.fatalities}}')],
-    {% endfor %}
-    ]);
 
-    // var dataProportions= google.visualization.arrayToDataTable([
-    // ['Year','Proportion of MC crashes in Traffic Crashes','Proportion of MC Fatalities in Traffic Fatalities'],
-    // {% for p in proportions %}
-    //   ['{{p.year}}',parseInt('{{p.fatalities}}'),parseFloat('{{p.fatalities}}')],
-    // {% endfor %}
-    // ]);
-    var dataProportions = google.visualization.arrayToDataTable([
-    ['Year','Proportion of MC crashes in Traffic Crashes','Proportion of MC Fatalities in Traffic Fatalities'],
-    ['2011',3.2,18.8],
-    ['2012',3.8,18.8],
-    ['2013',3.3,19.2],
-    ['2014',3.1,18],
-    ['2015',2.9,19.9],
-    ['2016',2.7,17.2],
-    ['2017',2.6,17.7],
-    ['2018',2.4,17.1]
-    ]);
-
-    var injuredByMonth = google.visualization.arrayToDataTable([
-    ['Month','MC Operators Injured','MC Passengers Injured'],
-    {% for data in injuredAverage %}
-        ['{{data.month}}',parseInt('{{data.fatal_mcOperator}}'),parseInt('{{data.fatal_mcPassenger}}')],
+    function drawVisualization() {
+   // Some raw data (not necessarily accurate)
+      var dataFatalities = google.visualization.arrayToDataTable([
+      ['Year','MC Fatalities','Fatalities'],
+      {% for d,tt in zip(mc_data,traffic) %}
+          ['{{d.year}}',parseInt('{{d.fatalities}}'),parseInt('{{tt.fatalities}}')],
       {% endfor %}
-    ]);
+      ]);
 
-    var fatalByMonth = google.visualization.arrayToDataTable([
-    ['Month','MC Operators Killed','MC Passengers killed'],
-    {% for data in fatalAverage %}
-        ['{{data.month}}',parseInt('{{data.fatal_mcOperator}}'),parseInt('{{data.fatal_mcPassenger}}')],
-      {% endfor %}
-    ]);
+      // var dataProportions= google.visualization.arrayToDataTable([
+      // ['Year','Proportion of MC crashes in Traffic Crashes','Proportion of MC Fatalities in Traffic Fatalities'],
+      // {% for p in proportions %}
+      //   ['{{p.year}}',parseInt('{{p.fatalities}}'),parseFloat('{{p.fatalities}}')],
+      // {% endfor %}
+      // ]);
+      var dataProportions = google.visualization.arrayToDataTable([
+      ['Year','Proportion of MC crashes in Traffic Crashes','Proportion of MC Fatalities in Traffic Fatalities'],
+      ['2011',3.2,18.8],
+      ['2012',3.8,18.8],
+      ['2013',3.3,19.2],
+      ['2014',3.1,18],
+      ['2015',2.9,19.9],
+      ['2016',2.7,17.2],
+      ['2017',2.6,17.7],
+      ['2018',2.4,17.1]
+      ]);
 
-var optionsFatalities = {
-  title : 'Motorcycle Fatalities in Florida (2011 to 2019)',
-  vAxes: {0: {title: 'Motorcycle Fatalities',minValue: 0, titleTextStyle:{  bold: 0,  italic: 0 }},
-          1: {title: 'Traffic Fatalities',minValue: 0, titleTextStyle:{  bold: 0,  italic: 0 }}},
-  hAxis: {title: '', titleTextStyle:{  bold: 1,  italic: 0 }, format: "", minValue: 2000, maxValue: 2018, ticks: [2011,2012,2013,2014,2015,2016,2017,2018, 2019 ],textStyle : { fontSize: 9  },  
-    slantedText: false, slantedTextAngle:90},
-  seriesType: 'bars',
-  series: {0: {targetAxisIndex:0, type:'bars'},
-  1: {targetAxisIndex:1, type: 'line', pointShape: 'circle',color: 'blue',pointSize: 8,lineWidth: 2},
-  0:{color: 'red'}
-  },
-  legend: { position: 'bottom' },
-  backgroundColor: '#A2A2A2',
-};
+      var injuredByMonth = google.visualization.arrayToDataTable([
+      ['Month','MC Operators Injured','MC Passengers Injured'],
+      {% for data in injuredAverage %}
+          ['{{data.month}}',parseInt('{{data.fatal_mcOperator}}'),parseInt('{{data.fatal_mcPassenger}}')],
+        {% endfor %}
+      ]);
 
-var optionsProportions = {
-  // chartArea:{width:'85%'},
-    title : 'Proportion of Motorcycle (MC) Crashes and Fatalities in Florida (2011-2019)',
-    vAxis: {title: 'Values in Percentage(%)',titleTextStyle:{  bold: 1,  italic: 0 }},
-    hAxis: {title: '', titleTextStyle:{  bold: 1,  italic: 0 }, format: "", minValue: 2000, maxValue: 2018, ticks: [2011,2012,2013,2014,2015,2016,2017,2018,2019 ],textStyle : { fontSize: 9 },  
-      slantedText: false, slantedTextAngle:90},
-    seriesType: 'lines',
-    series: { 0:{pointShape: 'circle',pointSize: 8,lineWidth: 2},
-    1:{pointShape: 'circle',pointSize: 8,lineWidth: 2}},
-    legend: { position: 'bottom' },
-    backgroundColor: '#A2A2A2',
-    
-  };
+      var fatalByMonth = google.visualization.arrayToDataTable([
+      ['Month','MC Operators Killed','MC Passengers killed'],
+      {% for data in fatalAverage %}
+          ['{{data.month}}',parseInt('{{data.fatal_mcOperator}}'),parseInt('{{data.fatal_mcPassenger}}')],
+        {% endfor %}
+      ]);
 
-  var optionsinjuredByMonth = {
-      //chartArea:{width:'85%'},
-    title : 'Seriously Injured Motorcyclists by Month (2016-2018 Average)',
-    vAxis: {title: '',titleTextStyle:{  bold: 1,  italic: 0 }},
-    hAxis: {title: '', titleTextStyle:{  bold: 1,  italic: 0 }, format: "", minValue: 2000, maxValue: 2018, ticks: [2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018 ],textStyle : { fontSize: 9  },  
+  var optionsFatalities = {
+    title : 'Motorcycle Fatalities in Florida (2011 to 2019)',
+    vAxes: {0: {title: 'Motorcycle Fatalities',minValue: 0, titleTextStyle:{  bold: 0,  italic: 0 }},
+            1: {title: 'Traffic Fatalities',minValue: 0, titleTextStyle:{  bold: 0,  italic: 0 }}},
+    hAxis: {title: '', titleTextStyle:{  bold: 1,  italic: 0 }, format: "", minValue: 2000, maxValue: 2018, ticks: [2011,2012,2013,2014,2015,2016,2017,2018, 2019 ],textStyle : { fontSize: 9  },
       slantedText: false, slantedTextAngle:90},
     seriesType: 'bars',
-    isStacked: true,
+    series: {0: {targetAxisIndex:0, type:'bars'},
+    1: {targetAxisIndex:1, type: 'line', pointShape: 'circle',color: 'blue',pointSize: 8,lineWidth: 2},
+    0:{color: 'red'}
+    },
     legend: { position: 'bottom' },
     backgroundColor: '#A2A2A2',
-    
   };
 
-  var optionsfatalByMonth = {
-      //chartArea:{width:'85%'},
-    title : 'Motorcycle(MC) Fatalities by Month (2016-2018 Average)',
-    vAxis: {title: '',titleTextStyle:{  bold: 1,  italic: 0 }},
-    hAxis: {title: '', titleTextStyle:{  bold: 1,  italic: 0 }, format: "", minValue: 2000, maxValue: 2018, ticks: [2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018 ],textStyle : { fontSize: 9  },  
-      slantedText: false, slantedTextAngle:90},
-    seriesType: 'bars',
-    isStacked: true,
-    legend: { position: 'bottom' },
-    backgroundColor: '#A2A2A2',
-    
-  };    
+  var optionsProportions = {
+    // chartArea:{width:'85%'},
+      title : 'Proportion of Motorcycle (MC) Crashes and Fatalities in Florida (2011-2019)',
+      vAxis: {title: 'Values in Percentage(%)',titleTextStyle:{  bold: 1,  italic: 0 }},
+      hAxis: {title: '', titleTextStyle:{  bold: 1,  italic: 0 }, format: "", minValue: 2000, maxValue: 2018, ticks: [2011,2012,2013,2014,2015,2016,2017,2018,2019 ],textStyle : { fontSize: 9 },
+        slantedText: false, slantedTextAngle:90},
+      seriesType: 'lines',
+      series: { 0:{pointShape: 'circle',pointSize: 8,lineWidth: 2},
+      1:{pointShape: 'circle',pointSize: 8,lineWidth: 2}},
+      legend: { position: 'bottom' },
+      backgroundColor: '#A2A2A2',
 
-var chartFatalities = new google.visualization.ComboChart(document.getElementById('Fatalities'));
-chartFatalities.draw(dataFatalities, optionsFatalities);
+    };
 
-var chartProportions = new google.visualization.ComboChart(document.getElementById('proportions'));
-chartProportions.draw(dataProportions, optionsProportions);
+    var optionsinjuredByMonth = {
+        //chartArea:{width:'85%'},
+      title : 'Seriously Injured Motorcyclists by Month (2016-2018 Average)',
+      vAxis: {title: '',titleTextStyle:{  bold: 1,  italic: 0 }},
+      hAxis: {title: '', titleTextStyle:{  bold: 1,  italic: 0 }, format: "", minValue: 2000, maxValue: 2018, ticks: [2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018 ],textStyle : { fontSize: 9  },
+        slantedText: false, slantedTextAngle:90},
+      seriesType: 'bars',
+      isStacked: true,
+      legend: { position: 'bottom' },
+      backgroundColor: '#A2A2A2',
 
-var chartInjuredByMonth = new google.visualization.ComboChart(document.getElementById('injuredByMonth'));
-chartInjuredByMonth.draw(injuredByMonth, optionsinjuredByMonth);
+    };
 
-var chartFatalByMonth = new google.visualization.ComboChart(document.getElementById('fatalByMonth'));
-chartFatalByMonth.draw(fatalByMonth, optionsfatalByMonth);
-}
+    var optionsfatalByMonth = {
+        //chartArea:{width:'85%'},
+      title : 'Motorcycle(MC) Fatalities by Month (2016-2018 Average)',
+      vAxis: {title: '',titleTextStyle:{  bold: 1,  italic: 0 }},
+      hAxis: {title: '', titleTextStyle:{  bold: 1,  italic: 0 }, format: "", minValue: 2000, maxValue: 2018, ticks: [2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018 ],textStyle : { fontSize: 9  },
+        slantedText: false, slantedTextAngle:90},
+      seriesType: 'bars',
+      isStacked: true,
+      legend: { position: 'bottom' },
+      backgroundColor: '#A2A2A2',
 
-  </script>
-{% endblock %}
+    };
 
-{% block body %} 
+  var chartFatalities = new google.visualization.ComboChart(document.getElementById('Fatalities'));
+  chartFatalities.draw(dataFatalities, optionsFatalities);
+
+  var chartProportions = new google.visualization.ComboChart(document.getElementById('proportions'));
+  chartProportions.draw(dataProportions, optionsProportions);
+
+  var chartInjuredByMonth = new google.visualization.ComboChart(document.getElementById('injuredByMonth'));
+  chartInjuredByMonth.draw(injuredByMonth, optionsinjuredByMonth);
+
+  var chartFatalByMonth = new google.visualization.ComboChart(document.getElementById('fatalByMonth'));
+  chartFatalByMonth.draw(fatalByMonth, optionsfatalByMonth);
+</script>
+{% endblock %} {% block body %}
 <header>
-<div class="jumbotron text-center my-2 p-1 bg-dark text-white clearfix d-flex">
-<img src="/static/image/motorcycle.jpg" class="d-inline-block" alt="Logo" style="width: 1.5rem; height: 1.5rem; float: left;">
-<h3 class="heading d-inline-block ml-auto">Motorcycle Analysis Dashboard</h3>
-<a href="" class="d-inline-block pull-right ml-auto">CONTACT US</a>
-</div>
+  <div
+    class="jumbotron text-center my-2 p-1 bg-dark text-white clearfix d-flex"
+  >
+    <img
+      src="/static/image/motorcycle.jpg"
+      class="d-inline-block"
+      alt="Logo"
+      style="width: 1.5rem; height: 1.5rem; float: left;"
+    />
+    <h3 class="heading d-inline-block ml-auto">
+      Motorcycle Analysis Dashboard
+    </h3>
+    <a href="" class="d-inline-block pull-right ml-auto">CONTACT US</a>
+  </div>
 
-<div class="container-fluid pl-3 bg-dark text-white">
-<h3 class="heading pl-3">Filters</h3>
-<div class="container-fluid pl-3 label_filter">
-<form action='/dashboard' method="POST">
-     <label >Year:</label>
-    <select name="year" id="year" method="GET" action="/">
-        <option value="0" selected>--Select Year--</option>
-        {% for year in years[:] %}
-        <option value= "{{year}}" >{{year}}</option>"
-        {% endfor %}
-    </select>
-    <label>District: </label>
-    <select name="district" id="district" method="GET" action="/">
-        <option value="0" selected>--Select district--</option>
-        {% for district in districts %}
-        <option value= "{{district}}" >District {{district}}</option>"
-        {% endfor %}
-    </select>
-    <label>County: </label>
-    <select name="county" id="county" method="GET" action="/">
-        <option value="0" selected>--Select County--</option>
-        {% for county,count in zip(counties, range(1,100)) %}
-        <option value= "{{count}}" >{{county}}</option>"
-        {% endfor %}
-    </select>
-    <input type='submit' value='Submit'>
-    <input type='reset' value='Reset'>
-</form>
-</div>
-</div>
+  <div class="container-fluid pl-3 bg-dark text-white">
+    <h3 class="heading pl-3">Filters</h3>
+    <div class="container-fluid pl-3 label_filter">
+      <form action="/dashboard" method="POST">
+        <label>Year:</label>
+        <select name="year" id="year" method="GET" action="/">
+          <option value="0" selected>--Select Year--</option>
+          {% for year in years[:] %}
+          <option value="{{year}}">{{year}}</option
+          >" {% endfor %}
+        </select>
+        <label>District: </label>
+        <select name="district" id="district" method="GET" action="/">
+          <option value="0" selected>--Select district--</option>
+          {% for district in districts %}
+          <option value="{{district}}">District {{district}}</option
+          >" {% endfor %}
+        </select>
+        <label>County: </label>
+        <select name="county" id="county" method="GET" action="/">
+          <option value="0" selected>--Select County--</option>
+          {% for county,count in zip(counties, range(1,100)) %}
+          <option value="{{count}}">{{county}}</option
+          >" {% endfor %}
+        </select>
+        <input type="submit" value="Submit" />
+        <input type="reset" value="Reset" />
+      </form>
+    </div>
+  </div>
 </header>
 <div class="container-fluid">
-    <div class="row pl-3 pt-3 pr-3 pb-0">
-      <!-- <div id="FatalitiesHead" class="col-sm-6 p-1 border">Motorcycle Fatalities in Florida (2001 to 2019)</div>
+  <div class="row pl-3 pt-3 pr-3 pb-0">
+    <!-- <div id="FatalitiesHead" class="col-sm-6 p-1 border">Motorcycle Fatalities in Florida (2001 to 2019)</div>
       <div id="proportionsHead" class="col-sm-6 p-1 border">Proportion of Motorcycle (MC) Crashes and Fatalities in Florida (2001-2019)</div>         -->
-        <div id="Fatalities" class="col-sm-6 p-1 pr-2 border"></div>
-        <div id="proportions" class="col-sm-6 p-1 pr-2 border"></div>
-
-    </div>
-    <div class="row pl-3 pl-3 pt-2 pr-3">
-        <div id="injuredByMonth" class="col-sm-6 p-1 pr-2 border"></div>
-        <div id="fatalByMonth" class="col-sm-6 p-1 pr-2 border"></div>
-    </div>
+    <div id="Fatalities" class="col-sm-6 p-1 pr-2 border"></div>
+    <div id="proportions" class="col-sm-6 p-1 pr-2 border"></div>
+  </div>
+  <div class="row pl-3 pl-3 pt-2 pr-3">
+    <div id="injuredByMonth" class="col-sm-6 p-1 pr-2 border"></div>
+    <div id="fatalByMonth" class="col-sm-6 p-1 pr-2 border"></div>
+  </div>
 </div>
 
 <footer>
-    <div class="container">
-       <label class="align-center"> @2020 All right reservered </label>
-    </div>
+  <div class="container">
+    <label class="align-center"> @2020 All right reservered </label>
+  </div>
 </footer>
 {% endblock %}
