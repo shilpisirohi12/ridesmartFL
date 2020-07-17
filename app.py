@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 import json
 import requests
 
+import MySQLdb
 import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey
@@ -13,9 +14,13 @@ from sqlalchemy.sql import text
 app=Flask(__name__)
 app.jinja_env.globals.update(zip=zip)
 app.secret_key='cutr_usf'
-app.config['SQLALCHEMY_DATABASE_URI']='mysql://cutr:cutr@127.0.0.1:3306/cutr'
+# app.config['SQLALCHEMY_DATABASE_URI']='mysql://cutr:cutr@127.0.0.1:3306/cutr'
 
-engine=create_engine('mysql://cutr:cutr@127.0.0.1:3306/cutr')
+# engine=create_engine('mysql://cutr:cutr@127.0.0.1:3306/cutr')
+
+app.config['SQLALCHEMY_DATABASE_URI']='mysql://admin:motorcycle@florida-motorcycle.ctszlnjsvxow.us-east-1.rds.amazonaws.com:3306/motorcycle'
+
+engine=create_engine('mysql://admin:motorcycle@florida-motorcycle.ctszlnjsvxow.us-east-1.rds.amazonaws.com:3306/motorcycle')
 #conn=engine.connect()
 db=SQLAlchemy(app)
 URL='http://127.0.0.1:5000'
